@@ -1,0 +1,57 @@
+name: Publish NuGet Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Dry run (build but do not push)'
+        type: boolean
+        default: true
+
+jobs:
+  build-and-publish:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+
+      - name: Setup MSVC
+        uses: microsoft/setup-msbuild@v2
+        with:
+          vs-version: 17
+
+      - name: Get libdmtx source
+        run: |
+          git clone https://github.com/dmtx/libdmtx.git libdmtx_native
+
+      - name: Build Native libdmtx
+        run: |
+          cd libdmtx_native
+          mkdir build_msvc -Force | Out-Null
+          cd build_msvc
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF
+          cmake --build . --config Release
+
+      - name: Copy Native DLL
+        shell: pwsh
+        run: |
+          Copy-Item libdmtx_native/build_msvc/Release/dmtx.dll src/Libdmtx.Net/runtimes/win-x64/native/libdmtx.dll -Force
+
+      - name: Build & Pack .NET
+        run: |
+          dotnet pack src/Libdmtx.Net -c Release -o ./nupkg
+
+      - name: Push to GitHub Packages
+        if: ${{ !inputs.dry-run }}
+        run: |
+          dotnet nuget push nupkg/Libdmtx.Net.*.nupkg `
+            --api-key ${{ secrets.GITHUB_TOKEN }} `
+            --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json

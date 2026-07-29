@@ -3,9 +3,9 @@ obj/
 *.user
 *.suo
 .vs/
-runtimes/*/native/*.dll
-runtimes/*/native/*.so
-runtimes/*/native/*.dylib
 nupkg/
 samples/*/bin/
 samples/*/obj/
+src/**/runtimes/**/*.dll
+src/**/runtimes/**/*.so
+src/**/runtimes/**/*.dylib

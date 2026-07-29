@@ -12,6 +12,18 @@
 - ✅ Decode Data Matrix barcode image → text/bytes
 - ✅ Modern C# API with nullable annotations
 
+## Installation
+
+### From GitHub Packages
+
+
+
+### From local NuGet package
+
+
+
+---
+
 ## Quick Start
 
 ### 1. Build the native library
