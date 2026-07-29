@@ -46,7 +46,7 @@ public static class Dmtx
         try
         {
             ApplyDecodeProperties(decode, options);
-            return ScanForSymbols(decode, options);
+            return ScanForSymbols(decode, height, options);
         }
         finally
         {
@@ -140,11 +140,11 @@ public static class Dmtx
         NativeMethods.dmtxEncodeSetProp(enc, (int)DmtxProperty.ImageFlip, (int)DmtxFlip.Y);
     }
 
-    private static unsafe DecodeResult[] ScanForSymbols(nint decode, DecodeOptions options)
+    private static unsafe DecodeResult[] ScanForSymbols(nint decode, int imageHeight, DecodeOptions options)
     {
         var results = new List<DecodeResult>();
         int maxCodes = options.MaxCodes ?? int.MaxValue;
-        int corrections = options.CorrectionsMax ?? 5;
+        int corrections = options.CorrectionsMax ?? -1;
 
         DmtxTime timeout = default;
         nint timeoutPtr = nint.Zero;
@@ -170,13 +170,55 @@ public static class Dmtx
                         {
                             var nativeMsg = Marshal.PtrToStructure<DmtxMessageNative>(msg);
                             var result = new DecodeResult();
+
                             if (nativeMsg.output != nint.Zero && nativeMsg.outputSize > 0)
                             {
                                 result.Data = new byte[nativeMsg.outputSize];
                                 Marshal.Copy(nativeMsg.output, result.Data, 0, result.Data.Length);
                             }
                             result.PadCount = nativeMsg.padCount;
-                            results.Add(result);
+
+                            unsafe
+                            {
+                                int sizeIdx = *(int*)(region + 296);
+                                if (sizeIdx >= 0)
+                                {
+                                    result.Rows = *(int*)(region + 300);
+                                    result.Cols = *(int*)(region + 304);
+                                    result.Capacity = NativeMethods.dmtxGetSymbolAttribute(
+                                        (int)DmtxSymAttribute.SymbolDataWords, sizeIdx);
+                                }
+
+                                double* m = (double*)(region + 392);
+                                double[] sx = { 0.0, 0.0, 1.0, 1.0 };
+                                double[] sy = { 0.0, 1.0, 0.0, 1.0 };
+                                result.Corners = new (int X, int Y)[4];
+                                for (int k = 0; k < 4; k++)
+                                {
+                                    // dmtxMatrix3VMultiplyBy 使用列主序访问
+                                    double tx = sx[k] * m[0] + sy[k] * m[3] + m[6];
+                                    double ty = sx[k] * m[1] + sy[k] * m[4] + m[7];
+                                    double tw = sx[k] * m[2] + sy[k] * m[5] + m[8];
+                                    int cx = (int)(tx / tw + 0.5);
+                                    int cy = imageHeight - 1 - (int)(ty / tw + 0.5);
+                                    result.Corners[k] = (cx, cy);
+                                }
+                            }
+
+                            // 按内容去重：相同文本只保留第一个
+                            string text = System.Text.Encoding.ASCII.GetString(result.Data).TrimEnd(' ');
+                            bool duplicate = false;
+                            foreach (var r in results)
+                            {
+                                string existing = System.Text.Encoding.ASCII.GetString(r.Data).TrimEnd(' ');
+                                if (existing == text)
+                                {
+                                    duplicate = true;
+                                    break;
+                                }
+                            }
+                            if (!duplicate)
+                                results.Add(result);
                         }
                         finally { NativeMethods.dmtxMessageDestroy(ref msg); }
                     }

@@ -4,9 +4,7 @@ using Libdmtx;
 
 if (args.Length > 0 && args[0] == "decode" && args.Length > 1)
 {
-    // 解码指定图片
-    string imagePath = args[1];
-    DecodeImageFile(imagePath);
+    DecodeImageFile(args[1]);
     return;
 }
 
@@ -18,7 +16,7 @@ Console.WriteLine($"libdmtx version: {version ?? "(library not loaded)"}");
 if (version == null)
 {
     Console.WriteLine("\nERROR: libdmtx native library not found!");
-    Console.WriteLine("See native/BUILD.md for instructions on building the native library.");
+    Console.WriteLine("See native/BUILD.md for instructions.");
     return;
 }
 
@@ -27,12 +25,7 @@ Console.WriteLine("\n--- Encoding ---");
 string text = "Hello, Data Matrix!";
 Console.WriteLine($"Input text: \"{text}\"");
 
-var encodeOpts = new EncodeOptions
-{
-    ModuleSize = 5,
-    MarginSize = 2,
-};
-
+var encodeOpts = new EncodeOptions { ModuleSize = 5, MarginSize = 2 };
 EncodeResult encoded = Dmtx.EncodeString(text, encodeOpts);
 Console.WriteLine($"Encoded image: {encoded.Width}x{encoded.Height} px");
 
@@ -51,7 +44,6 @@ string outputPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "output_
 SaveAsBgr24Bmp(encoded.PixelData, encoded.Width, encoded.Height, outputPath);
 Console.WriteLine($"\nImage saved to: {outputPath}");
 
-// 如果有图片参数，也解码
 if (args.Length > 0)
 {
     Console.WriteLine($"\n--- Decoding file: {args[0]} ---");
@@ -72,7 +64,6 @@ static void DecodeImageFile(string imagePath)
     using var bitmap = new Bitmap(imagePath);
     Console.WriteLine($"Image: {bitmap.Width}x{bitmap.Height}, {bitmap.PixelFormat}");
 
-    // LockBits 获取 BGR24 像素数据
     Rectangle rect = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
     BitmapData bd = bitmap.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
     try
@@ -81,12 +72,7 @@ static void DecodeImageFile(string imagePath)
         byte[] pixels = new byte[stride * bitmap.Height];
         System.Runtime.InteropServices.Marshal.Copy(bd.Scan0, pixels, 0, pixels.Length);
 
-        var opts = new DecodeOptions
-        {
-            TimeoutMs = 10000,
-            MaxCodes = 10,
-        };
-
+        var opts = new DecodeOptions { TimeoutMs = 10000, MaxCodes = 10 };
         DecodeResult[] results = Dmtx.Decode(pixels, bitmap.Width, bitmap.Height, stride, opts);
         Console.WriteLine($"Found {results.Length} Data Matrix symbol(s)");
 
@@ -94,6 +80,11 @@ static void DecodeImageFile(string imagePath)
         {
             Console.WriteLine($"\n  [{i}] Text: \"{results[i].Text}\"");
             Console.WriteLine($"      Bytes: {results[i].Data.Length}, Pad: {results[i].PadCount}");
+            Console.WriteLine($"      Symbol: {results[i].Cols}x{results[i].Rows}");
+            if (results[i].Corners != null)
+                Console.WriteLine($"      Corners: ({results[i].Corners[0].X},{results[i].Corners[0].Y}) ({results[i].Corners[1].X},{results[i].Corners[1].Y}) ({results[i].Corners[2].X},{results[i].Corners[2].Y}) ({results[i].Corners[3].X},{results[i].Corners[3].Y})");
+            else
+                Console.WriteLine("      Corners: null");
         }
 
         if (results.Length == 0)

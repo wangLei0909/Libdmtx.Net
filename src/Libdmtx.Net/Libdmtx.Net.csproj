@@ -9,7 +9,7 @@
 
     <!-- NuGet 包元数据 -->
     <PackageId>Libdmtx.Net</PackageId>
-    <Version>0.7.9-dev</Version>
+    <Version>0.7.9-dev.2</Version>
     <Authors>Libdmtx.Net Contributors</Authors>
     <Company>Libdmtx.Net Contributors</Company>
     <Description>Community-maintained .NET 8/9 wrapper for libdmtx — Data Matrix ECC200 barcode encoding and decoding.
