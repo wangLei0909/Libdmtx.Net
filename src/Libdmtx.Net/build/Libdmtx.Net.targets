@@ -1,0 +1,18 @@
+<Project>
+  <!--
+    Libdmtx.Net build targets.
+    Ensures the native libdmtx library is included in the build output.
+  -->
+  <ItemGroup Condition="'$(DisableLibdmtxNativeCopy)' != 'true'">
+    <NativeLibs Include="$(MSBuildThisFileDirectory)..\runtimes\**\native\libdmtx.dll" />
+    <NativeLibs Include="$(MSBuildThisFileDirectory)..\runtimes\**\native\libdmtx.so" />
+    <NativeLibs Include="$(MSBuildThisFileDirectory)..\runtimes\**\native\libdmtx.dylib" />
+  </ItemGroup>
+
+  <Target Name="_CopyLibdmtxNative" BeforeTargets="AfterBuild"
+          Condition="'$(DisableLibdmtxNativeCopy)' != 'true'">
+    <Copy SourceFiles="@(NativeLibs)" DestinationFolder="$(OutDir)"
+          Condition="!Exists('$(OutDir)\%(FileName)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+</Project>

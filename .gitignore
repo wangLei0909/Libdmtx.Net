@@ -1,0 +1,11 @@
+bin/
+obj/
+*.user
+*.suo
+.vs/
+runtimes/*/native/*.dll
+runtimes/*/native/*.so
+runtimes/*/native/*.dylib
+nupkg/
+samples/*/bin/
+samples/*/obj/

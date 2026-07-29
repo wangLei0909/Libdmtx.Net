@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>Libdmtx</RootNamespace>
+
+    <!-- NuGet 包元数据 -->
+    <PackageId>Libdmtx.Net</PackageId>
+    <Version>0.7.9-dev</Version>
+    <Authors>Libdmtx.Net Contributors</Authors>
+    <Company>Libdmtx.Net Contributors</Company>
+    <Description>Community-maintained .NET 8/9 wrapper for libdmtx — Data Matrix ECC200 barcode encoding and decoding.
+Native library (libdmtx, BSD-2-Clause licensed) is bundled for Windows x64.
+For Linux/macOS, install libdmtx separately.</Description>
+    <PackageTags>datamatrix;barcode;dmtx;libdmtx;datamatrix-barcode;decoding;encoding</PackageTags>
+    <RepositoryUrl>https://github.com/dmtx/libdmtx</RepositoryUrl>
+    <PackageLicenseExpression>BSD-2-Clause</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/dmtx/libdmtx/tree/master/dotnet</PackageProjectUrl>
+    <Copyright>libdmtx is Copyright Mike Laughton, Vadim A. Misbakh-Soloviov and others. See LICENSE.</Copyright>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <!-- 打包时包含原生 DLL -->
+  <ItemGroup>
+    <Content Include="runtimes\win-x64\native\libdmtx.dll" PackagePath="runtimes\win-x64\native\libdmtx.dll" />
+    <Content Include="build\Libdmtx.Net.targets" PackagePath="build\Libdmtx.Net.targets" />
+    <None Include="..\..\README.md" PackagePath="\" Pack="true" Visible="false" />
+  </ItemGroup>
+
+</Project>
